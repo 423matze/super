@@ -1,49 +1,71 @@
-const NAV__SELECTOR = document.getElementsByClassName(
-  'notion-callout bg-brown-light border'
-)
+const SELECTOR = "code:not([super-embed-seen])";
 
-makeNav = function () {
-  if (NAV__SELECTOR.length != 0) {
-    const nav = document.getElementsByClassName('super-navbar__item-list')
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", afterDOMLoaded);
+} else {
+  afterDOMLoaded();
+}
 
-    console.log(nav[0])
-    const mylinks = document.querySelectorAll(
-      '.highlighted-background.bg-brown'
-    )
+function afterDOMLoaded() {
+  setupEmbeds();
+  setTimeout(addToggle(), 1000);
+}
 
-    console.log('mylinks', mylinks)
+function addToggle() {
+  console.log("init toggle");
 
-    mylinks.forEach(link => {
-      let firstChild = link.firstElementChild
-      firstChild.classList.remove('link')
-      firstChild.classList.add('super-navbar__item')
+  const elm = document.getElementById("my-toggle");
 
-      let newLi = document.createElement('li')
-      newLi.append(firstChild)
+  elm.addEventListener("click", (e) => {
+    let mode = html.className === "theme-light" ? "theme-dark" : "theme-light";
 
-      console.log('neuer link', newLi)
+    html.className = mode;
 
-      nav[0].append(newLi)
-    })
-    NAV__SELECTOR[0].remove()
-  }
+    localStorage["color-preference"] = mode.replace("theme-", "");
+  });
+}
+
+function clearBlock(el) {
+  const node = el.parentElement.parentElement;
+  node.innerHTML = "";
+  return node;
+}
+
+function setupEmbeds() {
+  document.querySelectorAll(SELECTOR).forEach((node) => {
+    node.setAttribute("super-embed-seen", 1);
+    if (node.innerText.startsWith("super-embed:")) {
+      const code = node.innerText.replace("super-embed:", "");
+      const parentNode = clearBlock(node);
+      parentNode.innerHTML = code;
+
+      parentNode.querySelectorAll("script").forEach((script) => {
+        if (!script.src && script.innerText) {
+          eval(script.innerText);
+          script.remove(); // Removing the original inline script after evaluation
+        } else {
+          const scr = document.createElement("script");
+          Array.from(script.attributes).forEach((attr) => {
+            scr.setAttribute(attr.name, attr.value);
+          });
+          script.parentNode.insertBefore(scr, script.nextSibling); // Insert new script right after the original one
+          script.remove(); // Remove the original script
+        }
+      });
+    }
+  });
 }
 
 var observer = new MutationObserver(function (mutations) {
-  if (document.querySelector(NAV__SELECTOR)) {
-    makeNav()
+  if (document.querySelector(SELECTOR)) {
+    setupEmbeds();
+    addToggle();
   }
-})
+});
 
 observer.observe(document, {
   attributes: false,
   childList: true,
   characterData: false,
-  subtree: true
-})
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', afterDOMLoaded)
-} else {
-  makeNav()
-}
+  subtree: true,
+});
