@@ -1,73 +1,49 @@
-const SELECTOR = 'code:not([super-embed-seen])';
+const NAV__SELECTOR = document.getElementsByClassName(
+  'notion-callout bg-brown-light border'
+)
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', afterDOMLoaded);
-} else {
-    afterDOMLoaded();
-};
+makeNav = function () {
+  if (NAV__SELECTOR.length != 0) {
+    const nav = document.getElementsByClassName('super-navbar__item-list')
 
-function afterDOMLoaded() {
-    setupEmbeds();
-    setTimeout(addToggle(), 1000)
-};
+    console.log(nav[0])
+    const mylinks = document.querySelectorAll(
+      '.highlighted-background.bg-brown'
+    )
 
-function addToggle() {
-  
-    console.log("init toggle");
-  
-    const elm = document.getElementById('my-toggle');
-  
-    elm.addEventListener("click", (e) => {  let mode = html.className === "theme-light" ? "theme-dark" : "theme-light";
-      
-      html.className = mode;
-      
-      localStorage['color-preference'] = mode.replace('theme-','');
-      
-    });
-    
-};
+    console.log('mylinks', mylinks)
 
-function clearBlock(el) {
-    const node = el.parentElement.parentElement;
-    node.innerHTML = '';
-    return node;
-}
+    mylinks.forEach(link => {
+      let firstChild = link.firstElementChild
+      firstChild.classList.remove('link')
+      firstChild.classList.add('super-navbar__item')
 
-function setupEmbeds() {
-    document.querySelectorAll(SELECTOR).forEach((node) => {
-        node.setAttribute('super-embed-seen', 1);
-        if (node.innerText.startsWith('super-embed:')) {
-            const code = node.innerText.replace('super-embed:', '');
-            const parentNode = clearBlock(node);
-            parentNode.innerHTML = code;
-            
-            parentNode.querySelectorAll('script').forEach((script) => {
-                if (!script.src && script.innerText) {
-                    eval(script.innerText);
-                    script.remove();  // Removing the original inline script after evaluation
-                } else {
-                    const scr = document.createElement('script');
-                    Array.from(script.attributes).forEach(attr => {
-                        scr.setAttribute(attr.name, attr.value);
-                    });
-                    script.parentNode.insertBefore(scr, script.nextSibling); // Insert new script right after the original one
-                    script.remove(); // Remove the original script
-                }
-            });
-        }
-    });
+      let newLi = document.createElement('li')
+      newLi.append(firstChild)
+
+      console.log('neuer link', newLi)
+
+      nav[0].append(newLi)
+    })
+    NAV__SELECTOR[0].remove()
+  }
 }
 
 var observer = new MutationObserver(function (mutations) {
-    if (document.querySelector(SELECTOR)) {
-        setupEmbeds();
-        addToggle()
-    }
-});
+  if (document.querySelector(NAV__SELECTOR)) {
+    makeNav()
+  }
+})
 
 observer.observe(document, {
-    attributes: false,
-    childList: true,
-    characterData: false,
-    subtree: true
-});
+  attributes: false,
+  childList: true,
+  characterData: false,
+  subtree: true
+})
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', afterDOMLoaded)
+} else {
+  makeNav()
+}
